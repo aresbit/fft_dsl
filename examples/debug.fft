@@ -1,0 +1,1 @@
+fft test size 2 { base_case when size == 1 { } recursive { } }

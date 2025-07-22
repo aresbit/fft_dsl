@@ -1,0 +1,10 @@
+lib: [
+  "_build/install/default/lib/fft_dsl/META"
+  "_build/install/default/lib/fft_dsl/dune-package"
+]
+bin: [
+  "_build/install/default/bin/fft_dsl"
+]
+doc: [
+  "_build/install/default/doc/fft_dsl/README.md"
+]

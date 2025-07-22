@@ -1,0 +1,6 @@
+fft fft_radix2 size 4 {
+    base_case when size == 1 {
+    }
+    recursive {
+    }
+}
