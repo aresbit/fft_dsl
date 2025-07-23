@@ -24,7 +24,7 @@ rule token = parse
   | newline { incr_line lexbuf; NEWLINE }
   | comment { token lexbuf }
   
-  (* 关键字 *)
+  (* 关键字 - 这些必须在标识符之前 *)
   | "fft" { FFT }
   | "size" { SIZE }
   | "base_case" { BASE_CASE }
@@ -32,13 +32,16 @@ rule token = parse
   | "recursive" { RECURSIVE }
   | "for" { FOR }
   | "to" { TO }
+  | "do" { DO }
   | "if" { IF }
   | "then" { THEN }
   | "else" { ELSE }
   | "end" { END }
   | "W" { TWIDDLE_W }
+  | "done" { DONE }
   
-  (* 操作符和分隔符 *)
+  (* 操作符和分隔符 - 这些必须在标识符之前 *)
+  | "==" { EQ }
   | "=" { EQUAL }
   | "+" { PLUS }
   | "-" { MINUS }
@@ -53,7 +56,6 @@ rule token = parse
   | "_" { UNDERSCORE }
   | "," { COMMA }
   | "i" { IMAGINARY }
-  | "==" { EQ }
   
   (* 字面量 *)
   | integer { INT (int_of_string (Lexing.lexeme lexbuf)) }

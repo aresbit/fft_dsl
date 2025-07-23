@@ -23,7 +23,7 @@ let twiddle_factor n k =
 
 (* 生成复数表达式的OCaml代码 *)
 let rec generate_complex_expr = function
-  | ComplexLit (r, i) -> Printf.sprintf "{ re = %g; im = %g }" r i
+  | ComplexLit (r, i) -> Printf.sprintf "{ re = %.1f; im = %.1f }" r i
   | ComplexVar s -> s
   | ComplexArray (arr, idx) -> Printf.sprintf "%s.(%d)" arr idx
   | Add (e1, e2) -> 
@@ -36,7 +36,7 @@ let rec generate_complex_expr = function
       Printf.sprintf "mul_complex (%s) (%s)"
         (generate_complex_expr e1) (generate_complex_expr e2)
   | Twiddle (n, k) ->
-      Printf.sprintf "twiddle_factor %d %d" n k
+      Printf.sprintf "(twiddle_factor %d (int_of_float (Complex.re (%s))))" n (generate_complex_expr k)
 
 (* 生成语句的OCaml代码 *)
 let rec generate_statement = function

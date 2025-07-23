@@ -19,7 +19,14 @@ let compile_file input_file output_file =
     (* 词法和语法分析 *)
     let lexbuf = Lexing.from_string content in
     Lexing.set_filename lexbuf input_file;
-    let ast = Parser.program Lexer.token lexbuf in
+    let ast = 
+      try Parser.program Lexer.token lexbuf 
+      with Parsing.Parse_error ->
+        let pos = Lexing.lexeme_start_p lexbuf in
+        Printf.eprintf "Parse error at line %d, position %d near: '%s'\n" 
+          pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Lexing.lexeme lexbuf);
+        raise Parsing.Parse_error
+    in
     Printf.printf "Successfully parsed %d FFT definitions\n" (List.length ast);
     
     (* 语义分析 *)

@@ -14,15 +14,9 @@ echo "Testing with FFT DSL example..."
 # Create test directory if it doesn't exist
 mkdir -p examples
 
+# Use existing working_test.fft file
 # Create a simple test FFT DSL file
-cat > examples/test_fft.fft << 'EOF'
-fft fft_radix2 size 4 {
-    base_case when size == 1 {
-    }
-    recursive {
-    }
-}
-EOF
+cp examples/working_test.fft examples/test_fft.fft
 
 echo "Created test FFT DSL file with content:"
 echo "---"

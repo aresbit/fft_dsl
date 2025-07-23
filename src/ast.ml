@@ -7,7 +7,7 @@ type complex_expr =
   | Add of complex_expr * complex_expr
   | Sub of complex_expr * complex_expr  
   | Mul of complex_expr * complex_expr
-  | Twiddle of int * int         (* 旋转因子 W_N^k *)
+  | Twiddle of int * complex_expr         (* 旋转因子 W_N^k *)
 
 type stmt =
   | Assign of string * complex_expr                    (* x = expr *)
@@ -32,4 +32,4 @@ let rec string_of_complex_expr = function
   | Add (e1, e2) -> Printf.sprintf "(%s + %s)" (string_of_complex_expr e1) (string_of_complex_expr e2)
   | Sub (e1, e2) -> Printf.sprintf "(%s - %s)" (string_of_complex_expr e1) (string_of_complex_expr e2)
   | Mul (e1, e2) -> Printf.sprintf "(%s * %s)" (string_of_complex_expr e1) (string_of_complex_expr e2)
-  | Twiddle (n, k) -> Printf.sprintf "W_%d^%d" n k
+  | Twiddle (n, k) -> Printf.sprintf "W_%d^%s" n (string_of_complex_expr k)
