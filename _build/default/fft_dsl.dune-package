@@ -1,5 +1,0 @@
-(lang dune 3.19)
-(name fft_dsl)
-(version 0.1.0)
-(sections (lib .) (bin ../../bin) (doc ../../doc/fft_dsl))
-(files (lib (META dune-package)) (bin (fft_dsl)) (doc (README.md)))
