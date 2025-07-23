@@ -1,10 +1,13 @@
-fft fft_radix2 size 4 {
-    base_case when size == 1 {
-        output[0] = input[0]
-    }
-    recursive {
-        for k = 0 to 1 do
-            t = W_4^k
-        done
-    }
+fft simple_fft size 4 {
+  base_case when size = 1 {
+    result = input
+  }
+  
+  recursive {
+    even = input[0]
+    odd = input[1] 
+    temp = mul W_4^0 odd
+    output[0] = even + temp
+    output[1] = even - temp
+  }
 }

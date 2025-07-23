@@ -23,7 +23,7 @@ let twiddle_factor n k =
 
 (* 生成复数表达式的OCaml代码 *)
 let rec generate_complex_expr = function
-  | ComplexLit (r, i) -> Printf.sprintf "{ re = %.1f; im = %.1f }" r i
+  | ComplexLit (r, i) -> Printf.sprintf "{ re = %.6f; im = %.6f }" r i
   | ComplexVar s -> s
   | ComplexArray (arr, idx) -> Printf.sprintf "%s.(%d)" arr idx
   | Add (e1, e2) -> 
@@ -36,29 +36,35 @@ let rec generate_complex_expr = function
       Printf.sprintf "mul_complex (%s) (%s)"
         (generate_complex_expr e1) (generate_complex_expr e2)
   | Twiddle (n, k) ->
-      Printf.sprintf "(twiddle_factor %d (int_of_float (Complex.re (%s))))" n (generate_complex_expr k)
+      Printf.sprintf "(twiddle_factor %d %s)" n 
+        (match k with
+         | ComplexLit (r, _) -> string_of_int (int_of_float r)
+         | ComplexVar s -> s
+         | _ -> "(" ^ generate_complex_expr k ^ ".re |> int_of_float)")
 
 (* 生成语句的OCaml代码 *)
-let rec generate_statement = function
+let rec generate_statement indent = function
   | Assign (var, expr) ->
-      Printf.sprintf "  let %s = %s in" var (generate_complex_expr expr)
+      Printf.sprintf "%slet %s = %s in" indent var (generate_complex_expr expr)
   | ArrayAssign (arr, idx, expr) ->
-      Printf.sprintf "  %s.(%d) <- %s;" arr idx (generate_complex_expr expr)
+      Printf.sprintf "%s%s.(%d) <- %s;" indent arr idx (generate_complex_expr expr)
   | For (var, start, end_val, stmts) ->
-      let body = String.concat "\n" (List.map generate_statement stmts) in
-      Printf.sprintf "  for %s = %d to %d do\n%s\n  done;" var start end_val body
+      let body = String.concat "\n" (List.map (generate_statement (indent ^ "  ")) stmts) in
+      Printf.sprintf "%sfor %s = %d to %d do\n%s\n%sdone;" indent var start end_val body indent
   | If (var, value, then_stmts, else_stmts) ->
-      let then_body = String.concat "\n" (List.map generate_statement then_stmts) in
+      let then_body = String.concat "\n" (List.map (generate_statement (indent ^ "  ")) then_stmts) in
       let else_body = match else_stmts with
         | None -> ""
-        | Some stmts -> " else begin\n" ^ String.concat "\n" (List.map generate_statement stmts) ^ "\n  end"
+        | Some stmts -> 
+            let else_code = String.concat "\n" (List.map (generate_statement (indent ^ "  ")) stmts) in
+            Printf.sprintf " else begin\n%s\n%send" else_code indent
       in
-      Printf.sprintf "  if %s = %d then begin\n%s\n  end%s;" var value then_body else_body
+      Printf.sprintf "%sif %s = %d then begin\n%s\n%send%s;" indent var value then_body indent else_body
 
 (* 生成FFT函数 *)
 let generate_fft_function (fft_def : fft_def) =
-  let base_case_code = String.concat "\n" (List.map generate_statement fft_def.base_case) in
-  let recursive_code = String.concat "\n" (List.map generate_statement fft_def.recursive_case) in
+  let base_case_code = String.concat "\n" (List.map (generate_statement "    ") fft_def.base_case) in
+  let recursive_code = String.concat "\n" (List.map (generate_statement "    ") fft_def.recursive_case) in
   
   Printf.sprintf {|
 let rec %s input =
@@ -86,6 +92,7 @@ let rec %s input =
       output.(k + half_n) <- sub_complex fft_even.(k) t;
     done;
     
+    (* User-defined recursive statements *)
 %s
     output
   )
