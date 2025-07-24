@@ -2,25 +2,19 @@
   open Ast
 %}
 
-%token FFT SIZE BASE_CASE WHEN RECURSIVE FOR TO DO IF THEN ELSE END TWIDDLE_W DONE
+%token FFT SIZE BASE_CASE WHEN RECURSIVE FOR TO DO IF THEN ELSE END DONE
 %token EQUAL PLUS MINUS MULT LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE
 %token POWER UNDERSCORE COMMA IMAGINARY EQ EOF
 %token <int> INT
 %token <float> FLOAT  
 %token <string> ID
 
+%left PLUS MINUS
+%left MULT
+%right POWER
+
 %start program
 %type <Ast.program> program
-%type <Ast.fft_def> fft_definition
-%type <Ast.fft_def list> fft_definitions
-%type <Ast.stmt list> base_case_section
-%type <Ast.stmt list> recursive_section
-%type <Ast.stmt list> statement_list
-%type <Ast.stmt> statement
-%type <Ast.complex_expr> complex_expr
-%type <Ast.complex_expr> number_expr
-
-%right EQUAL
 
 %%
 
@@ -63,18 +57,38 @@ complex_expr:
   | complex_expr PLUS complex_expr { Add ($1, $3) }
   | complex_expr MINUS complex_expr { Sub ($1, $3) }
   | MULT complex_expr complex_expr { Mul ($2, $3) }
-  | ID POWER complex_expr 
-    { let id_str = $1 in
-      if String.length id_str >= 2 && String.sub id_str 0 2 = "W_" then
-        let n_str = String.sub id_str 2 (String.length id_str - 2) in
-        let n = int_of_string n_str in
-        Twiddle (n, $3)
-      else
-        ComplexVar id_str }
+  | primary_expr { $1 }
+
+primary_expr:
+  | twiddle_expr { $1 }
   | number_expr { $1 }
   | ID LBRACKET INT RBRACKET { ComplexArray ($1, $3) }
-  | LPAREN complex_expr RPAREN { $2 }
   | ID { ComplexVar $1 }
+  | LPAREN complex_expr RPAREN { $2 }
+
+twiddle_expr:
+  | ID POWER INT 
+    { 
+      let id_str = $1 in
+      if String.length id_str >= 2 && String.sub id_str 0 2 = "W_" then (
+        let n_str = String.sub id_str 2 (String.length id_str - 2) in
+        let n = int_of_string n_str in
+        Twiddle (n, ComplexLit (float_of_int $3, 0.0))
+      ) else (
+        ComplexVar id_str
+      )
+    }
+  | ID POWER ID
+    {
+      let id_str = $1 in
+      if String.length id_str >= 2 && String.sub id_str 0 2 = "W_" then (
+        let n_str = String.sub id_str 2 (String.length id_str - 2) in
+        let n = int_of_string n_str in
+        Twiddle (n, ComplexVar $3)
+      ) else (
+        ComplexVar id_str
+      )
+    }
 
 number_expr:
   | FLOAT { ComplexLit ($1, 0.0) }
