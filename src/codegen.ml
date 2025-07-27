@@ -104,37 +104,42 @@ let %s input =
 (* 生成完整的OCaml程序 *)
 let generate_ocaml_program (prog : program) =
   let complex_type = generate_complex_type () in
-  let functions = String.concat "\n" (List.map generate_fft_function prog) in
-  
+  let functions = String.concat "\n\n" (List.map generate_fft_function prog) in
+  (* Use the first FFT function name for the main test *)
   let main_function = 
     match prog with
     | [] -> ""
     | first_fft :: _ ->
         let first_name = first_fft.name in
-        Printf.sprintf {|
-let () =
-  (* Test with simple input *)
-  let test_input = [|
-    { re = 1.0; im = 0.0 };
-    { re = 1.0; im = 0.0 };
-    { re = 1.0; im = 0.0 };
-    { re = 1.0; im = 0.0 };
-  |] in
-  
-  Printf.printf "Input:\n";
-  Array.iteri (fun i c -> 
-    Printf.printf "[%%d]: " i; print_complex c; Printf.printf "\n"
-  ) test_input;
-  
-  let result = %s test_input in
-  
-  Printf.printf "\nFFT Result:\n";
-  Array.iteri (fun i c -> 
-    Printf.printf "[%%d]: " i; print_complex c; Printf.printf "\n"
-  ) result;
-  
-  Printf.printf "\nFFT DSL execution completed successfully!\n"
-|} first_name
+        let template = String.concat "\n" [
+          "let () =";
+          "  (* 从命令行参数读取输入数据 *)";
+          "  let args = Array.sub Sys.argv 1 (Array.length Sys.argv - 1) in";
+          "  if Array.length args = 0 then begin";
+          "    Printf.printf \"Usage: %s [real1 imag1 real2 imag2 ...]\\n\" Sys.argv.(0);";
+          "    exit 1";
+          "  end;";
+          "  ";
+          "  (* 将参数转换为复数数组 *)";
+          "  let input = Array.init (Array.length args / 2) (fun i ->";
+          "    let real = float_of_string args.(2 * i) in";
+          "    let imag = float_of_string args.(2 * i + 1) in";
+          "    { re = real; im = imag }";
+          "  ) in";
+          "  ";
+          "  Printf.printf \"Input:\\n\";";
+          "  Array.iteri (fun i c -> ";
+          "    Printf.printf \"[%d]: %g + %gi\\n\" i c.re c.im";
+          "  ) input;";
+          "  ";
+          "  let result = " ^ first_name ^ " input in";
+          "  ";
+          "  Printf.printf \"\\nFFT Result:\\n\";";
+          "  Array.iteri (fun i c -> ";
+          "    Printf.printf \"[%d]: %g + %gi\\n\" i c.re c.im";
+          "  ) result"
+        ] in
+        template
   in
   
   String.concat "\n" [complex_type; functions; main_function]

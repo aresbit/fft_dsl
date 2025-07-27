@@ -1,0 +1,28 @@
+fft fft4 size 4 {
+  base_case when size == 1 {
+    output[0] = input[0]
+  }
+  recursive {
+    even0 = input[0]
+    even1 = input[2]
+    odd0 = input[1]
+    odd1 = input[3]
+    
+    g0 = even0 + even1
+    g1 = even0 - even1
+    
+    h0 = odd0 + odd1
+    h1 = odd0 - odd1
+    
+    w0 = W_4^0
+    w1 = W_4^1
+    
+    w0h0 = mul w0 h0
+    w1h1 = mul w1 h1
+    
+    output[0] = g0 + w0h0
+    output[1] = g1 + w1h1
+    output[2] = g0 - w0h0
+    output[3] = g1 - w1h1
+  }
+}

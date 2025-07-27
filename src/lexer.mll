@@ -39,14 +39,8 @@ rule token = parse
   | "then" { THEN }
   | "else" { ELSE }
   | "end" { END }
-  | "done" { DONE }
-  | "result" { ID "result" }
-  | "input" { ID "input" }
-  | "output" { ID "output" }
-  | "even" { ID "even" }
-  | "odd" { ID "odd" }
-  | "temp" { ID "temp" }
-  | "w" { ID "w" }
+  | "W" { TWIDDLE_W }
+  | "mul" { MUL }
   
   (* 操作符和分隔符 *)
   | "==" { EQ }
@@ -75,6 +69,15 @@ rule token = parse
   | integer { INT (int_of_string (Lexing.lexeme lexbuf)) }
   | float_num { FLOAT (float_of_string (Lexing.lexeme lexbuf)) }
   | identifier { ID (Lexing.lexeme lexbuf) }
+  | "W_" digit+ "^" digit+ { 
+      let str = Lexing.lexeme lexbuf in
+      let len = String.length str in
+      let underscore_pos = String.index str '_' in
+      let power_pos = String.index str '^' in
+      let n = int_of_string (String.sub str (underscore_pos + 1) (power_pos - underscore_pos - 1)) in
+      let k = int_of_string (String.sub str (power_pos + 1) (len - power_pos - 1)) in
+      Parser.TWIDDLE(n, k)
+  }
   
   | eof { EOF }
   | _ { raise (Error ("Unexpected character: " ^ Lexing.lexeme lexbuf)) }
