@@ -35,11 +35,11 @@ rule token = parse
   | "for" { FOR }
   | "to" { TO }
   | "do" { DO }
+  | "done" { DONE }
   | "if" { IF }
   | "then" { THEN }
   | "else" { ELSE }
   | "end" { END }
-  | "W" { TWIDDLE_W }
   | "mul" { MUL }
   
   (* 操作符和分隔符 *)
@@ -47,7 +47,7 @@ rule token = parse
   | "=" { EQUAL }
   | "+" { PLUS }
   | "-" { MINUS }
-  | "mul" { MULT }
+  | "*" { MULT }
   | "(" { LPAREN }
   | ")" { RPAREN }
   | "[" { LBRACKET }
@@ -59,25 +59,15 @@ rule token = parse
   | "," { COMMA }
   | "i" { IMAGINARY }
   
-  (* 旋转因子模式 W_N *)
-  | "W_" (digit+ as n) { 
-      let twiddle_id = "W_" ^ n in
-      ID twiddle_id
+  (* 旋转因子模式 W_N^k *)
+  | "W_" (digit+ as n) "^" (digit+ as k) { 
+      TWIDDLE_FACTOR (int_of_string n, int_of_string k)
     }
   
   (* 字面量和标识符 *)
   | integer { INT (int_of_string (Lexing.lexeme lexbuf)) }
   | float_num { FLOAT (float_of_string (Lexing.lexeme lexbuf)) }
   | identifier { ID (Lexing.lexeme lexbuf) }
-  | "W_" digit+ "^" digit+ { 
-      let str = Lexing.lexeme lexbuf in
-      let len = String.length str in
-      let underscore_pos = String.index str '_' in
-      let power_pos = String.index str '^' in
-      let n = int_of_string (String.sub str (underscore_pos + 1) (power_pos - underscore_pos - 1)) in
-      let k = int_of_string (String.sub str (power_pos + 1) (len - power_pos - 1)) in
-      Parser.TWIDDLE(n, k)
-  }
   
   | eof { EOF }
   | _ { raise (Error ("Unexpected character: " ^ Lexing.lexeme lexbuf)) }
